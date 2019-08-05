@@ -7,6 +7,9 @@ MOUNT_POINT="$(echo $1)"
 CDRDAO_TOC="$(mktemp)"
 CDPARANOIA_TOC="$(mktemp)"
 
+###ERROR_HANDLING###
+trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exit 2" 2 15
+
 ###FUNCTIONS###
 function MAKE_DIRS(){
     mkdir -p DATA && mkdir -p MUSIC
@@ -96,7 +99,8 @@ function TOC_GENERATE(){
         sed -n "${CDRDAO_TOC_START},${CDRDAO_TOC_END}p" "${CDRDAO_TOC}" \
         | sed '1,2d;$d' \
         | sed 's/^/Track /;s/\t/ /g;s/( */ /g;s/)//g;s/AUDIO/Audio/g;s/DATA/Data/g' \
-        | awk '{"printf 'LBA=%06d' "$6""|getline LBA;"printf '%02d' "$2""|getline NUM;print $1,NUM,$3,LBA}' \
+        | awk '{"printf '%02d' "$2""|getline NUM;print $1,NUM,$3,$4}' \
+        | awk '{"printf 'LBA=%06d' "$6""|getline LBA;print $1,$2,$3,LBA}' \
         > "${CHANGE_CDRDAO_TOC}"
     }
     function CDPARANOIA_TOC_MM(){
@@ -128,7 +132,7 @@ function TOC_GENERATE(){
     EXT_CDPARANOIA_TIME && \
     paste -d " " "${CHANGE_CDRDAO_TOC}" "${CHANGE_CDPARANOIA_TOC}" \
     | awk '{print $1,$2,$3,$5,$4}' > default.toc && \
-    rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" "${CHANGE_CDRDAO_TOC}" "${CHANGE_CDPARANOIA_TOC}"&& \
+    rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" "${CHANGE_CDRDAO_TOC}" "${CHANGE_CDPARANOIA_TOC}" && \
     echo "Done!"
     } || exit 2
 }  
@@ -136,5 +140,3 @@ function TOC_GENERATE(){
 
 ###MAIN_PROCESSING###
 MAKE_DIRS && DISK_RIPPING && DATA_CONV && WAV_TO_MP3 && TOC_GENERATE
-###ERROR_HANDLING###
-trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exit 2" 2 15
