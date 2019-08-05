@@ -12,7 +12,7 @@ CDRDAO_TOC="$(mktemp)"
 CDPARANOIA_TOC="$(mktemp)"
 
 ###ERROR_HANDLING###
-trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exit 2" ERR
+trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.';exit 2" ERR
 
 ###FUNCTIONS###
 function ALIAS(){
