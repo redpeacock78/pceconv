@@ -8,10 +8,6 @@ trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exi
 MOUNT_POINT="$(echo $1)"
 CDRDAO_TOC="$(mktemp)"
 CDPARANOIA_TOC="$(mktemp)"
-CDRDAO_TOC_START="$(grep -n -m1 Track ${CDRDAO_TOC} | awk -F : '{print $1}')"
-CDRDAO_TOC_END="$(grep -n -m1 Leadout ${CDRDAO_TOC} | awk -F : '{print $1}')"
-CDPARANOIA_TOC_START="$(grep -n "track_num = 1 start" ${CDPARANOIA_TOC} | awk -F : '{print $1}')"
-CDPARANOIA_TOC_END="$(grep -n Attempting ${CDPARANOIA_TOC} | awk -F : '{print $1}')"
 
 ###FUNCTIONS###
 function MAKE_DIRS(){
@@ -98,6 +94,11 @@ function WAV_TO_MP3(){
     } || exit 2
 }
 function TOC_GENERATE(){
+    ##PARAMETERS##
+    CDRDAO_TOC_START="$(grep -n -m1 Track ${CDRDAO_TOC} | awk -F : '{print $1}')"
+    CDRDAO_TOC_END="$(grep -n -m1 Leadout ${CDRDAO_TOC} | awk -F : '{print $1}')"
+    CDPARANOIA_TOC_START="$(grep -n "track_num = 1 start" ${CDPARANOIA_TOC} | awk -F : '{print $1}')"
+    CDPARANOIA_TOC_END="$(grep -n Attempting ${CDPARANOIA_TOC} | awk -F : '{print $1}')"
     ##FUNCTIONS##
     function CHANGE_CDRDAO_TOC(){
         sed -n "${CDRDAO_TOC_START},${CDRDAO_TOC_END}p" "${CDRDAO_TOC}" \
