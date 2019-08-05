@@ -1,7 +1,5 @@
 #! /usr/bin/env bash
 set -E
-###ERROR_HANDLING###
-trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exit 2" 2 15
 
 
 ###PARAMETERS###
@@ -17,11 +15,13 @@ function DISK_RIPPING(){
     ##OS_JUDGE##
     if [[ "$(uname)" == "Darwin" ]]; then
       function DISK_UNMOUNT(){
-          diskutil umount "${MOUNT_POINT}"
+          diskutil umount "${MOUNT_POINT}" \
+          || exit 2
       }
       function DISK_EJECT(){
           sleep 20 && \
-          drutil eject
+          drutil eject \
+          || exit 2
       }
     elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
       function DISK_UNMOUNT(){
@@ -127,3 +127,5 @@ function TOC_GENERATE(){
 
 ###MAIN_PROCESSING###
 MAKE_DIRS && DISK_RIPPING && DATA_CONV && WAV_TO_MP3 && TOC_GENERATE
+###ERROR_HANDLING###
+trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exit 2" 2 15
