@@ -70,12 +70,12 @@ function DISK_RIPPING(){
 function DATA_CONV(){
     {
     echo "Currently converting data..." && \
-    toc2cue -v 3 DATA/DATA.toc DATA/DATA.cue && \
+    (toc2cue -v 3 DATA/DATA.toc DATA/DATA.cue) > /dev/null 2>&1 && \
     dd if=DATA/DATA.bin of=MUSIC/MUSIC.bin conv=swab && \
     \cp -f DATA/DATA.cue MUSIC/MUSIC.cue && \
     sed -i -e "s#DATA/DATA.bin#MUSIC/MUSIC.bin#" MUSIC/MUSIC.cue && \
-    bchunk -w -v DATA/DATA.bin DATA/DATA.cue DATA/D_ && \
-    bchunk -w -v MUSIC/MUSIC.bin MUSIC/MUSIC.cue MUSIC/M_ && \
+    (bchunk -w -v DATA/DATA.bin DATA/DATA.cue DATA/D_) > /dev/null 2>&1 && \
+    (bchunk -w -v MUSIC/MUSIC.bin MUSIC/MUSIC.cue MUSIC/M_) > /dev/null 2>&1 && \
     for iso in $(\ls DATA | grep .iso | sed 's#^#DATA/#g'); do
         \cp -f ${iso} $(echo ${iso} | sed 's#DATA/D_##g')
     done && \
