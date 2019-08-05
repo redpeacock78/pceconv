@@ -92,45 +92,46 @@ function TOC_GENERATE(){
     CDRDAO_TOC_END="$(grep -n -m1 Leadout ${CDRDAO_TOC} | awk -F : '{print $1}')"
     CDPARANOIA_TOC_START="$(grep -n "track_num = 1 start" ${CDPARANOIA_TOC} | awk -F : '{print $1}')"
     CDPARANOIA_TOC_END="$(grep -n Attempting ${CDPARANOIA_TOC} | awk -F : '{print $1}')"
-    CHANGE_CDRDAO_TOC="$(mktemp)"
-    CHANGE_CDPARANOIA_TOC="$(mktemp)"
     ##FUNCTIONS##
     function EXT_CDRDAO_TOC(){
         sed -n "${CDRDAO_TOC_START},${CDRDAO_TOC_END}p" "${CDRDAO_TOC}" \
         | sed '1,2d;$d' \
         | sed 's/^/Track /;s/\t/ /g;s/( */ /g;s/)//g;s/AUDIO/Audio/g;s/DATA/Data/g' \
-        | awk '{"printf '%02d' "$2""|getline NUM;print $1,NUM,$3,$4}' \
-        | awk '{"printf 'LBA=%06d' "$6""|getline LBA;print $1,$2,$3,LBA}' \
-        > "${CHANGE_CDRDAO_TOC}"
+        | awk '{"echo "$2"|xargs -P1 printf '%02d'"|getline NUM;print $1,NUM,$3,$4}' \
+        | awk '{"echo "$6"|xargs -P1 printf 'LBA=%06d'"|getline LBA;print $1,$2,$3,LBA}' \
+        || exit 2
     }
-    function CDPARANOIA_TOC_MM(){
-        sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
-        | sed '$d;/^$/d' \
-        | awk '{print $8}' \
-        | awk -F , '{printf "%02d\n", $1}'
-    }
-    function CDPARANOIA_TOC_SS(){
-        sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
-        | sed '$d;/^$/d' \
-        | awk '{print $8}' \
-        | awk -F , '{printf "%02d\n", $2}'
-    }
-    function CDPARANOIA_TOC_FF(){
-        sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
-        | sed '$d;/^$/d' \
-        | awk '{print $8}' \
-        | awk -F , '{printf "%02d\n", $3}'
-    }
-    function EXT_CDPARANOIA_TIME(){
+    function EXT_CDPARANOIA_TOC(){
+        #FUNCTIONS#
+        function CDPARANOIA_TOC_MM(){
+            sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
+            | sed '$d;/^$/d' \
+            | awk '{print $8}' \
+            | awk -F , '{printf "%02d\n", $1}' \
+            || exit 2
+        }
+        function CDPARANOIA_TOC_SS(){
+            sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
+            | sed '$d;/^$/d' \
+            | awk '{print $8}' \
+            | awk -F , '{printf "%02d\n", $2}' \
+            || exit 2
+        }
+        function CDPARANOIA_TOC_FF(){
+            sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
+            | sed '$d;/^$/d' \
+            | awk '{print $8}' \
+            | awk -F , '{printf "%02d\n", $3}' \
+            || exit 2
+        }
+        #MAIN#
         paste -d : <(CDPARANOIA_TOC_MM) <(CDPARANOIA_TOC_SS) <(CDPARANOIA_TOC_FF) \
-        > "${CHANGE_CDPARANOIA_TOC}"
+        || exit 2
     }
     ##MAIN##
     {
     echo "Currently toc file is being generated..." && \
-    EXT_CDRDAO_TOC && \
-    EXT_CDPARANOIA_TIME && \
-    paste -d " " "${CHANGE_CDRDAO_TOC}" "${CHANGE_CDPARANOIA_TOC}" \
+    paste -d " " <(EXT_CDRDAO_TOC) <(EXT_CDPARANOIA_TOC) \
     | awk '{print $1,$2,$3,$5,$4}' > default.toc && \
     rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" "${CHANGE_CDRDAO_TOC}" "${CHANGE_CDPARANOIA_TOC}" && \
     echo "Done!"
