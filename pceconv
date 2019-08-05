@@ -11,8 +11,7 @@ CDPARANOIA_TOC="$(mktemp)"
 
 ###FUNCTIONS###
 function MAKE_DIRS(){
-    mkdir -p DATA && mkdir -p MUSIC && \
-    exit 0
+    mkdir -p DATA && mkdir -p MUSIC
 }
 function DISK_RIPPING(){
     ##OS_JUDGE##
