@@ -17,26 +17,23 @@ function DISK_RIPPING(){
     ##OS_JUDGE##
     if [[ "$(uname)" == "Darwin" ]]; then
       function DISK_UNMOUNT(){
-          diskutil umount "${MOUNT_POINT}" && \
-          exit 0 \
+          diskutil umount "${MOUNT_POINT}" \
           || exit 2
       }
       function DISK_EJECT(){
           diskutil mount "${MOUNT_POINT}" && \
           drutil list && \
-          drutil eject && \
-          exit 0 \
+          drutil eject \
           || exit 2
       }
     elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
       function DISK_UNMOUNT(){
-          sudo umount "${MOUNT_POINT}" && \
-          exit 0
+          sudo umount "${MOUNT_POINT}" \
+          || exit 2
       }
       function DISK_EJECT(){
           sudo mount "${MOUNT_POINT}" && \
-          eject "${MOUNT_POINT}" && \
-          exit 0 \
+          eject "${MOUNT_POINT}" \
           || exit 2
       }
     fi && \
@@ -54,9 +51,7 @@ function DISK_RIPPING(){
            --driver generic-mmc-raw \
            DATA/DATA.toc
     ) > "${CDRDAO_TOC}" 2>&1 && \
-    DISK_EJECT && \
-    echo "Done!" && \
-    exit 0
+    DISK_EJECT
     } || exit 2
 }
 function DATA_CONV(){
@@ -71,8 +66,7 @@ function DATA_CONV(){
     for iso in "$(\ls DATA | grep .iso | sed 's#^#DATA/#g')"; do
         \cp -f "${iso}" "$(echo ${iso} | sed 's/D_//g')"
     done && \
-    echo "Done!" && \
-    exit 0
+    echo "Done!"
     } || exit 2
 }
 function WAV_TO_MP3(){
@@ -88,8 +82,7 @@ function WAV_TO_MP3(){
                -f mp3 \
                "$(echo ${wav} | sed 's#MUSIC/M_##g;s#.wav##g').mp3"
     done && \
-    echo "Done!" && \
-    exit 0
+    echo "Done!"
     } || exit 2
 }
 function TOC_GENERATE(){
@@ -129,8 +122,7 @@ function TOC_GENERATE(){
     paste -d " " <(CHANGE_CDRDAO_TOC) <(paste -d : <(CDPARANOIA_TOC_MM) <(CDPARANOIA_TOC_SS) <(CDPARANOIA_TOC_FF)) \
     | awk '{print $1,$2,$3,$5,$4}' > default.toc && \
     rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
-    echo "Done!" && \
-    exit 0
+    echo "Done!"
     } || exit 2
 }  
 
