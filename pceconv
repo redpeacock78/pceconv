@@ -16,15 +16,12 @@ trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exi
 
 ###FUNCTIONS###
 function ALIAS(){
-  ###ALIAS###
-  {
   if type "gawk" > /dev/null 2>&1; then
     alias awk="gawk"
   else
     echo "Error: Please install GUN AWK(gawk)." \
     || exit 2
   fi
-  } || exit 2
 }
 function MAKE_DIRS(){
     mkdir -p DATA && mkdir -p MUSIC
