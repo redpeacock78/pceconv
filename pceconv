@@ -1,0 +1,145 @@
+#! /usr/bin/env bash
+set -E
+###ERROR_HANDLING###
+trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exit 2" 2 15
+
+
+###PARAMETERS###
+MOUNT_POINT="$(echo $1)"
+CDRDAO_TOC="$(mktemp)"
+CDPARANOIA_TOC="$(mktemp)"
+CDRDAO_TOC_START="$(grep -n -m1 Track ${CDRDAO_TOC} | awk -F : '{print $1}')"
+CDRDAO_TOC_END="$(grep -n -m1 Leadout ${CDRDAO_TOC} | awk -F : '{print $1}')"
+CDPARANOIA_TOC_START="$(grep -n "track_num = 1 start" ${CDPARANOIA_TOC} | awk -F : '{print $1}')"
+CDPARANOIA_TOC_END="$(grep -n Attempting ${CDPARANOIA_TOC} | awk -F : '{print $1}')"
+
+###FUNCTIONS###
+function MAKE_DIRS(){
+    mkdir -p DATA && mkdir -p MUSIC && \
+    exit 0
+}
+function DISK_RIPPING(){
+    ##OS_JUDGE##
+    if [[ "$(uname)" == "Darwin" ]]; then
+      function DISK_UNMOUNT(){
+          diskutil umount "${MOUNT_POINT}" && \
+          exit 0 \
+          || exit 2
+      }
+      function DISK_EJECT(){
+          diskutil mount "${MOUNT_POINT}" && \
+          drutil list && \
+          drutil eject && \
+          exit 0 \
+          || exit 2
+      }
+    elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
+      function DISK_UNMOUNT(){
+          sudo umount "${MOUNT_POINT}" && \
+          exit 0
+      }
+      function DISK_EJECT(){
+          sudo mount "${MOUNT_POINT}" && \
+          eject "${MOUNT_POINT}" && \
+          exit 0 \
+          || exit 2
+      }
+    fi && \
+    ##MAIN##
+    {
+    echo "Currently ripping the disk..." && \
+    DISK_UNMOUNT && \
+    (cdparanoia -vsQ) > "${CDPARANOIA_TOC}" 2>&1 && \
+    (
+    cdrdao read-cd \
+           --rspeed 24 \
+           --read-raw \
+           --source-device "${MOUNT_POINT}" \
+           --datafile DATA/DATA.bin \
+           --driver generic-mmc-raw \
+           DATA/DATA.toc
+    ) > "${CDRDAO_TOC}" 2>&1 && \
+    DISK_EJECT && \
+    echo "Done!" && \
+    exit 0
+    } || exit 2
+}
+function DATA_CONV(){
+    {
+    echo "Currently converting data..." && \
+    toc2cue DATA/DATA.toc DATA/DATA.cue && \
+    dd if=DATA/DATA.bin of=MUSIC/MUSIC.bin conv=swab && \
+    \cp -f DATA/DATA.cue MUSIC/MUSIC.cue && \
+    sed -i -e "s#DATA/DATA.bin#MUSIC/MUSIC.bin#" MUSIC/MUSIC.cue && \
+    bchunk -w DATA/DATA.bin DATA/DATA.cue DATA/D_ && \
+    bchunk -w MUSIC/MUSIC.bin MUSIC/MUSIC.cue MUSIC/M_ && \
+    for iso in "$(\ls DATA | grep .iso | sed 's#^#DATA/#g')"; do
+        \cp -f "${iso}" "$(echo ${iso} | sed 's/D_//g')"
+    done && \
+    echo "Done!" && \
+    exit 0
+    } || exit 2
+}
+function WAV_TO_MP3(){
+    {
+    echo "Currently converting from wav to mp3..."
+    for wav in "$(find MUSIC -name *.wav)"; do
+        ffmpeg -i "${wav}" \
+               -vn \
+               -ac 2 \
+               -ar 48000 \
+               -ab 320k \
+               -acodec libmp3lame \
+               -f mp3 \
+               "$(echo ${wav} | sed 's#MUSIC/M_##g;s#.wav##g').mp3"
+    done && \
+    echo "Done!" && \
+    exit 0
+    } || exit 2
+}
+function TOC_GENERATE(){
+    ##FUNCTIONS##
+    function CHANGE_CDRDAO_TOC(){
+        sed -n "${CDRDAO_TOC_START},${CDRDAO_TOC_END}p" "${CDRDAO_TOC}" \
+        | sed '1,2d;$d' \
+        | sed 's/^/Track /;s/\t/ /g;s/( */ /g;s/)//g;s/AUDIO/Audio/g;s/DATA/Data/g' \
+        | awk '{"printf 'LBA=%06d' "$6""|getline LBA;"printf '%02d' "$2""|getline NUM;print $1,NUM,$3,LBA}'
+    }
+    function CDPARANOIA_TOC_MM(){
+        sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
+        | sed '$d;/^$/d' \
+        | awk '{print $8}' \
+        | awk -F , '{printf "%02d\n", $1}'
+    }
+    function CDPARANOIA_TOC_SS(){
+        sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
+        | sed '$d;/^$/d' \
+        | awk '{print $8}' \
+        | awk -F , '{printf "%02d\n", $2}'
+    }
+    function CDPARANOIA_TOC_FF(){
+        sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
+        | sed '$d;/^$/d' \
+        | awk '{print $8}' \
+        | awk -F , '{printf "%02d\n", $3}'
+    }
+    ##MAIN##
+    {
+    echo "Currently toc file is being generated..." && \
+    paste -d " " <(CHANGE_CDRDAO_TOC) <(paste -d : <(CDPARANOIA_TOC_MM) <(CDPARANOIA_TOC_SS) <(CDPARANOIA_TOC_FF)) \
+    | awk '{print $1,$2,$3,$5,$4}' > default.toc && \
+    rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
+    echo "Done!" && \
+    exit 0
+    } || exit 2
+}  
+
+
+###MAIN_PROCESSING###
+{
+MAKE_DIRS && \
+DISK_RIPPING && \
+DATA_CONV && \
+WAV_TO_MP3 && \
+TOC_GENERATE
+}
