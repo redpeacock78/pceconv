@@ -124,6 +124,8 @@ function TOC_GENERATE(){
     ##MAIN##
     {
     echo "Currently toc file is being generated..." && \
+    EXT_CDRDAO_TOC && \
+    EXT_CDPARANOIA_TIME && \
     paste -d " " "${CHANGE_CDRDAO_TOC}" "CHANGE_CDPARANOIA_TOC"\
     | awk '{print $1,$2,$3,$5,$4}' > default.toc && \
     rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" "${CHANGE_CDRDAO_TOC}" "${CHANGE_CDPARANOIA_TOC}"&& \
