@@ -62,7 +62,7 @@ function DATA_CONV(){
     bchunk -w DATA/DATA.bin DATA/DATA.cue DATA/D_ && \
     bchunk -w MUSIC/MUSIC.bin MUSIC/MUSIC.cue MUSIC/M_ && \
     for iso in "$(\ls DATA | grep .iso | sed 's#^#DATA/#g')"; do
-        \cp -f ${iso} $(echo ${iso} | sed 's/D_//g')
+        \cp -f ${iso} $(echo ${iso} | sed 's#DATA/D_##g')
     done && \
     echo "Done!"
     } || exit 2
@@ -114,10 +114,13 @@ function TOC_GENERATE(){
         | awk '{print $8}' \
         | awk -F , '{printf "%02d\n", $3}'
     }
+    function CHANGE_CDPARANOIA_TOC(){
+        cat "$(paste -d : <(CDPARANOIA_TOC_MM) <(CDPARANOIA_TOC_SS) <(CDPARANOIA_TOC_FF))"
+    }
     ##MAIN##
     {
     echo "Currently toc file is being generated..." && \
-    paste -d " " <(CHANGE_CDRDAO_TOC) <(paste -d : <(CDPARANOIA_TOC_MM) <(CDPARANOIA_TOC_SS) <(CDPARANOIA_TOC_FF)) \
+    paste -d " " <(CHANGE_CDRDAO_TOC) <(CHANGE_CDPARANOIA_TOC) \
     | awk '{print $1,$2,$3,$5,$4}' > default.toc && \
     rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
     echo "Done!"
