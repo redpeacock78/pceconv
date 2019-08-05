@@ -21,8 +21,7 @@ function DISK_RIPPING(){
           || exit 2
       }
       function DISK_EJECT(){
-          diskutil mount "${MOUNT_POINT}" && \
-          drutil list && \
+          sleep 20 && \
           drutil eject \
           || exit 2
       }
@@ -51,7 +50,8 @@ function DISK_RIPPING(){
            --driver generic-mmc-raw \
            DATA/DATA.toc
     ) > "${CDRDAO_TOC}" 2>&1 && \
-    DISK_EJECT
+    DISK_EJECT && \
+    echo "Done!"
     } || exit 2
 }
 function DATA_CONV(){
