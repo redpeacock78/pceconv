@@ -17,13 +17,11 @@ function DISK_RIPPING(){
     ##OS_JUDGE##
     if [[ "$(uname)" == "Darwin" ]]; then
       function DISK_UNMOUNT(){
-          diskutil umount "${MOUNT_POINT}" \
-          || exit 2
+          diskutil umount "${MOUNT_POINT}"
       }
       function DISK_EJECT(){
           sleep 20 && \
-          drutil eject \
-          || exit 2
+          drutil eject
       }
     elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
       function DISK_UNMOUNT(){
