@@ -8,7 +8,7 @@ CDRDAO_TOC="$(mktemp)"
 CDPARANOIA_TOC="$(mktemp)"
 
 ###ERROR_HANDLING###
-trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exit 2" 2 15
+trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exit 2" ERR
 
 ###FUNCTIONS###
 function MAKE_DIRS(){
@@ -133,7 +133,7 @@ function TOC_GENERATE(){
     echo "Currently toc file is being generated..." && \
     paste -d " " <(EXT_CDRDAO_TOC) <(EXT_CDPARANOIA_TOC) \
     | awk '{print $1,$2,$3,$5,$4}' > default.toc && \
-    rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" "${CHANGE_CDRDAO_TOC}" "${CHANGE_CDPARANOIA_TOC}" && \
+    rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
     echo "Done!"
     } || exit 2
 }  
