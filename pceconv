@@ -2,6 +2,10 @@
 set -E
 
 
+
+###ALIAS_ACTIVATION###
+shopt -s expand_aliases
+
 ###PARAMETERS###
 MOUNT_POINT="$(echo $1)"
 CDRDAO_TOC="$(mktemp)"
@@ -11,6 +15,17 @@ CDPARANOIA_TOC="$(mktemp)"
 trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.;exit 2" ERR
 
 ###FUNCTIONS###
+function ALIAS(){
+  ###ALIAS###
+  {
+  if type "gawk" > /dev/null 2>&1; then
+    alias awk="gawk"
+  else
+    echo "Error: Please install GUN AWK(gawk)." \
+    || exit 2
+  fi
+  } || exit 2
+}
 function MAKE_DIRS(){
     mkdir -p DATA && mkdir -p MUSIC
 }
@@ -58,12 +73,12 @@ function DISK_RIPPING(){
 function DATA_CONV(){
     {
     echo "Currently converting data..." && \
-    toc2cue DATA/DATA.toc DATA/DATA.cue && \
+    toc2cue -v 3 DATA/DATA.toc DATA/DATA.cue && \
     dd if=DATA/DATA.bin of=MUSIC/MUSIC.bin conv=swab && \
     \cp -f DATA/DATA.cue MUSIC/MUSIC.cue && \
     sed -i -e "s#DATA/DATA.bin#MUSIC/MUSIC.bin#" MUSIC/MUSIC.cue && \
-    bchunk -w DATA/DATA.bin DATA/DATA.cue DATA/D_ && \
-    bchunk -w MUSIC/MUSIC.bin MUSIC/MUSIC.cue MUSIC/M_ && \
+    bchunk -w -v DATA/DATA.bin DATA/DATA.cue DATA/D_ && \
+    bchunk -w -v MUSIC/MUSIC.bin MUSIC/MUSIC.cue MUSIC/M_ && \
     for iso in $(\ls DATA | grep .iso | sed 's#^#DATA/#g'); do
         \cp -f ${iso} $(echo ${iso} | sed 's#DATA/D_##g')
     done && \
@@ -100,8 +115,7 @@ function TOC_GENERATE(){
         | sed 's/^/Track /;s/\t/ /g;s/( */ /g;s/)//g;s/AUDIO/Audio/g;s/DATA/Data/g' \
         | awk '{"echo "$2"|xargs -P1 printf '%02d'"|getline NUM;\
                 "echo "$6"|xargs -P1 printf 'LBA=%06d'"|getline LBA;\
-                print $1,NUM,$3,LBA;\
-                close(NUM);close(LBA)}' \
+                print $1,NUM,$3,LBA}' \
         || exit 2
     }
     function EXT_CDPARANOIA_TOC(){
@@ -111,8 +125,7 @@ function TOC_GENERATE(){
         | awk -F , '{"echo "$1"|xargs -P1 printf '%02d'"|getline MM;\
                      "echo "$2"|xargs -P1 printf '%02d'"|getline SS;\
                      "echo "$3"|xargs -P1 printf '%02d'"|getline FF;\
-                     print MM,SS,FF;\
-                     close(SS);close(SS);close(FF)}' \
+                     print MM,SS,FF}' \
         | tr " " : \
         || exit 2
     }
@@ -128,4 +141,4 @@ function TOC_GENERATE(){
 
 
 ###MAIN_PROCESSING###
-MAKE_DIRS && DISK_RIPPING && DATA_CONV && WAV_TO_MP3 && TOC_GENERATE
+ALIAS && MAKE_DIRS && DISK_RIPPING && DATA_CONV && WAV_TO_MP3 && TOC_GENERATE
