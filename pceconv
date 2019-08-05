@@ -62,7 +62,7 @@ function DATA_CONV(){
     bchunk -w DATA/DATA.bin DATA/DATA.cue DATA/D_ && \
     bchunk -w MUSIC/MUSIC.bin MUSIC/MUSIC.cue MUSIC/M_ && \
     for iso in "$(\ls DATA | grep .iso | sed 's#^#DATA/#g')"; do
-        \cp -f "${iso}" $(echo "${iso}" | sed 's/D_//g')
+        \cp -f ${iso} $(echo ${iso} | sed 's/D_//g')
     done && \
     echo "Done!"
     } || exit 2
@@ -71,7 +71,7 @@ function WAV_TO_MP3(){
     {
     echo "Currently converting from wav to mp3..."
     for wav in $(find MUSIC -name *.wav); do
-        ffmpeg -i "{$wav}" \
+        ffmpeg -i ${wav} \
                -vn \
                -ac 2 \
                -ar 48000 \
