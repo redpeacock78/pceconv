@@ -206,8 +206,7 @@ elif [[ "${@}" =~ "-w" ]] || \
   COPY_WAV && \
   TOC_GENERATE && \
   RESET_FILE_DESCLIPTER_VALUE
-  } || rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
-       RESET_FILE_DESCLIPTER_VALUE && \
+  } || RESET_FILE_DESCLIPTER_VALUE && \
        ERROR_MESSAGE && \
        exit 2
 elif [[ -z "${@}" ]]; then
@@ -222,8 +221,7 @@ else
   WAV_TO_MP3 && \
   TOC_GENERATE && \
   RESET_FILE_DESCLIPTER_VALUE
-  } || rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
-       RESET_FILE_DESCLIPTER_VALUE && \
+  } || RESET_FILE_DESCLIPTER_VALUE && \
        ERROR_MESSAGE && \
        exit 2
 fi
