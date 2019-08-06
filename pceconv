@@ -189,10 +189,12 @@ EOS
 ####MAIN_PROCESSING####
 if [[ "${@}" == "-v" ]] || \
    [[ "${@}" == "--version" ]]; then
-  PRINT_VERSION
+  PRINT_VERSION && \
+  rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
 elif [[ "${@}" == "-h" ]] || \
      [[ "${@}" == "--help" ]]; then
-  USAGE
+  USAGE && \
+  rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
 elif [[ "${@}" =~ "-w" ]] || \
      [[ "${@}" =~ "--no-mp3" ]]; then
   {
@@ -209,6 +211,7 @@ elif [[ "${@}" =~ "-w" ]] || \
        exit 2
 elif [[ -z "${@}" ]]; then
   ERROR_MESSAGE && \
+  rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
   exit 2
 else
   {
