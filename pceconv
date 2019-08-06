@@ -80,7 +80,7 @@ function DATA_CONV(){
     {
     echo "Currently converting data..." && \
     (toc2cue -v 3 DATA/DATA.toc DATA/DATA.cue) > /dev/null 2>&1 && \
-    dd if=DATA/DATA.bin of=MUSIC/MUSIC.bin conv=swab && \
+    (dd if=DATA/DATA.bin of=MUSIC/MUSIC.bin conv=swab) > /dev/null 2>&1 && \
     \cp -f DATA/DATA.cue MUSIC/MUSIC.cue && \
     sed -i -e "s#DATA/DATA.bin#MUSIC/MUSIC.bin#" MUSIC/MUSIC.cue && \
     (bchunk -w -v DATA/DATA.bin DATA/DATA.cue DATA/D_) > /dev/null 2>&1 && \
@@ -128,9 +128,7 @@ function TOC_GENERATE(){
         sed -n "${CDRDAO_TOC_START},${CDRDAO_TOC_END}p" "${CDRDAO_TOC}" \
         | sed '1,2d;$d' \
         | sed 's/^/Track /;s/\t/ /g;s/( */ /g;s/)//g;s/AUDIO/Audio/g;s/DATA/Data/g' \
-        | awk '{"echo "$2"|xargs -P1 printf '%02d'"|getline NUM;\
-                "echo "$6"|xargs -P1 printf 'LBA=%06d'"|getline LBA;\
-                print $1,NUM,$3,LBA}'
+        | awk '{printf("%s %02d %s LBA=%06d\n",$1,$2,$3,$6)}'
     }
     function EXT_CDPARANOIA_TOC(){
         sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
@@ -205,12 +203,14 @@ elif [[ "${@}" =~ "-w" ]] || \
   COPY_WAV && \
   TOC_GENERATE && \
   RESET_FILE_DESCLIPTER_VALUE
-  } || RESET_FILE_DESCLIPTER_VALUE && \
-       ERROR_MESSAGE && \
-       exit 2
+  } || {
+  RESET_FILE_DESCLIPTER_VALUE && \
+  ERROR_MESSAGE && \
+  exit 1
+  }
 elif [[ -z "${@}" ]]; then
   ERROR_MESSAGE && \
-  exit 2
+  exit 1
 else
   {
   CHANGE_FILE_DESCLIPTER_VALUE && \
@@ -220,7 +220,9 @@ else
   WAV_TO_MP3 && \
   TOC_GENERATE && \
   RESET_FILE_DESCLIPTER_VALUE
-  } || RESET_FILE_DESCLIPTER_VALUE && \
-       ERROR_MESSAGE && \
-       exit 2
+  } || {
+  RESET_FILE_DESCLIPTER_VALUE && \
+  ERROR_MESSAGE && \
+  exit 1
+  }
 fi
