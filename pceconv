@@ -149,13 +149,15 @@ function TOC_GENERATE(){
 }
 ###DISPLAY_INFMATION###
 function PRINT_VERSION(){
-    echo "${0##*/} version 0.0.1"
+    echo "${0##*/} version 0.0.1" && \
+    rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
 }
 function ERROR_MESSAGE(){
     cat << ERR >&2 
 Sorry. An error has occurred. :_(
 Refer 'pceconv -h' or 'pceconv --help' for how to use the command.
 ERR
+    rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
 }
 function USAGE(){
     PRINT_INFO="$(PRINT_VERSION)" && \
@@ -182,6 +184,7 @@ When the PC engine disk is mounted on /dev/sr0.
    ${0##*/} -w /dev/sr0
 
 EOS
+    rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
 }
 
 
@@ -189,12 +192,10 @@ EOS
 ####MAIN_PROCESSING####
 if [[ "${@}" == "-v" ]] || \
    [[ "${@}" == "--version" ]]; then
-  PRINT_VERSION && \
-  rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
+  PRINT_VERSION
 elif [[ "${@}" == "-h" ]] || \
      [[ "${@}" == "--help" ]]; then
-  USAGE && \
-  rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
+  USAGE
 elif [[ "${@}" =~ "-w" ]] || \
      [[ "${@}" =~ "--no-mp3" ]]; then
   {
@@ -211,7 +212,6 @@ elif [[ "${@}" =~ "-w" ]] || \
        exit 2
 elif [[ -z "${@}" ]]; then
   ERROR_MESSAGE && \
-  rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
   exit 2
 else
   {
