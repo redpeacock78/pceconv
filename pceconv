@@ -1,58 +1,67 @@
 #! /usr/bin/env bash
-set -E
 
 
 
-###ALIAS_ACTIVATION###
+
+####ALIAS_ACTIVATION####
 shopt -s expand_aliases
 
 ###PARAMETERS###
-MOUNT_POINT="$(echo $1)"
+DEFAULT_FILE_DESCLIPTER="$(ulimit -Sn)"
+MOUNT_POINT="$(echo ${@})"
 CDRDAO_TOC="$(mktemp)"
 CDPARANOIA_TOC="$(mktemp)"
 
-###ERROR_HANDLING###
+####ERROR_HANDLING####
 trap "rm -rf ${CDRDAO_TOC} ${CDPARANOIA_TOC} && echo 'An erorr has occurred.';exit 2" ERR
 
-###FUNCTIONS###
-function ALIAS(){
-  if type "gawk" > /dev/null 2>&1; then
-    alias awk="gawk"
-  else
-    echo "Error: Please install GUN AWK(gawk)." \
-    || exit 2
-  fi
+####FUNCTIONS####
+###MAIN###
+function CHANGE_FILE_DESCLIPTER_VALUE(){
+    ulimit -Sn 3000
 }
-function MAKE_DIRS(){
-    mkdir -p DATA && mkdir -p MUSIC
+function RESET_FILE_DESCLIPTER_VALUE(){
+    ulimit -Sn "${DEFAULT_FILE_DESCLIPTER}"
+}
+function ALIAS(){
+    if type "gawk" > /dev/null 2>&1; then
+      alias awk="gawk"
+    else
+      if [[ "$(awk --version | head -n1)" =~ "GNU" ]]; then
+        alias awk="awk"
+      else
+        echo "Error: Please install GUN AWK(gawk)." \
+        || exit 2
+      fi
+    fi
 }
 function DISK_RIPPING(){
+    ##FUNCTION##
+    function MAKE_DIRS(){
+        mkdir -p DATA && mkdir -p MUSIC
+    }
     ##OS_JUDGE##
     if [[ "$(uname)" == "Darwin" ]]; then
       function DISK_UNMOUNT(){
-          diskutil umount "${MOUNT_POINT}" \
-          || exit 2
+          diskutil umount "${MOUNT_POINT}"
       }
       function DISK_EJECT(){
-          sleep 20 && \
-          drutil eject \
-          || exit 2
+          drutil eject
       }
     elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
       function DISK_UNMOUNT(){
-          sudo umount "${MOUNT_POINT}" \
-          || exit 2
+          sudo umount "${MOUNT_POINT}"
       }
       function DISK_EJECT(){
           sudo mount "${MOUNT_POINT}" && \
-          eject "${MOUNT_POINT}" \
-          || exit 2
+          eject "${MOUNT_POINT}"
       }
     fi && \
     ##MAIN##
     {
+    DISK_UNMOUNT > /dev/null 2>&1 && \
+    MAKE_DIRS && \
     echo "Currently ripping the disk..." && \
-    DISK_UNMOUNT && \
     (cdparanoia -vsQ) > "${CDPARANOIA_TOC}" 2>&1 && \
     (
     cdrdao read-cd \
@@ -63,9 +72,9 @@ function DISK_RIPPING(){
            --driver generic-mmc-raw \
            DATA/DATA.toc
     ) > "${CDRDAO_TOC}" 2>&1 && \
-    DISK_EJECT && \
+    DISK_EJECT > /dev/null 2>&1 && \
     echo "Done!"
-    } || exit 2
+    }
 }
 function DATA_CONV(){
     {
@@ -80,7 +89,7 @@ function DATA_CONV(){
         \cp -f ${iso} $(echo ${iso} | sed 's#DATA/D_##g')
     done && \
     echo "Done!"
-    } || exit 2
+    }
 }
 function WAV_TO_MP3(){
     {
@@ -97,7 +106,14 @@ function WAV_TO_MP3(){
                "$(echo ${wav} | sed 's#MUSIC/M_##g;s#.wav##g').mp3"
     done && \
     echo "Done!"
-    } || exit 2
+    }
+}
+function COPY_WAV(){
+    echo "Currently copy wav files..."
+    for wav in $(\ls DATA | grep .wav | sed 's#^#MUSIC/#g'); do
+        \cp -f ${wav} $(echo ${wav} | sed 's#MUSIC/M_##g')
+    done && \
+    echo "Done!"
 }
 function TOC_GENERATE(){
     ##PARAMETERS##
@@ -112,19 +128,13 @@ function TOC_GENERATE(){
         | sed 's/^/Track /;s/\t/ /g;s/( */ /g;s/)//g;s/AUDIO/Audio/g;s/DATA/Data/g' \
         | awk '{"echo "$2"|xargs -P1 printf '%02d'"|getline NUM;\
                 "echo "$6"|xargs -P1 printf 'LBA=%06d'"|getline LBA;\
-                print $1,NUM,$3,LBA}' \
-        || exit 2
+                print $1,NUM,$3,LBA}'
     }
     function EXT_CDPARANOIA_TOC(){
         sed -n "${CDPARANOIA_TOC_START},${CDPARANOIA_TOC_END}p" "${CDPARANOIA_TOC}" \
         | sed '$d;/^$/d' \
         | awk '{print $8}' \
-        | awk -F , '{"echo "$1"|xargs -P1 printf '%02d'"|getline MM;\
-                     "echo "$2"|xargs -P1 printf '%02d'"|getline SS;\
-                     "echo "$3"|xargs -P1 printf '%02d'"|getline FF;\
-                     print MM,SS,FF}' \
-        | tr " " : \
-        || exit 2
+        | awk -F , '{printf("%02d:%02d:%02d\n",$1,$2,$3)}'
     }
     ##MAIN##
     {
@@ -133,9 +143,82 @@ function TOC_GENERATE(){
     | awk '{print $1,$2,$3,$5,$4}' > default.toc && \
     rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
     echo "Done!"
-    } || exit 2
-}  
+    }
+}
+###DISPLAY_INFMATION###
+function PRINT_VERSION(){
+    echo "${0##*/} version 0.0.1"
+}
+function ERROR_MESSAGE(){
+    cat << ERR >&2 
+Sorry. An error has occurred. :_(
+Refer 'pceconv -h' or 'pceconv --help' for how to use the command.
+ERR
+}
+function USAGE(){
+    PRINT_INFO="$(PRINT_VERSION)" && \
+    cat << EOS >&2
+${PRINT_INFO}
+Usage: ${0##*/} [OPTION] [SOURCE_DEVICE]
+
+It rips and converts data of PC engine (Super)CD-ROM^2.
+
+Options:
+    -w, --no-mp3     Does not convert wav files to mp3.
+    -h, --help       Show usage.
+    -v, --version    Print this script version.
+
+Example:
+When the PC engine disk is mounted on /dev/disk3.
+
+   ${0##*/} /dev/disk3
+   ${0##*/} -w /dev/disk3
+
+When the PC engine disk is mounted on /dev/sr0.
+
+   ${0##*/} /dev/sr0
+   ${0##*/} -w /dev/sr0
+
+EOS
+}
 
 
-###MAIN_PROCESSING###
-ALIAS && MAKE_DIRS && DISK_RIPPING && DATA_CONV && WAV_TO_MP3 && TOC_GENERATE
+
+####MAIN_PROCESSING####
+if [[ "${@}" == "-v" ]] || \
+   [[ "${@}" == "--version" ]]; then
+  PRINT_VERSION
+elif [[ "${@}" == "-h" ]] || \
+     [[ "${@}" == "--help" ]]; then
+  USAGE
+elif [[ "${@}" =~ "-w" ]] || \
+     [[ "${@}" =~ "--no-mp3" ]]; then
+  {
+  CHANGE_FILE_DESCLIPTER_VALUE && \
+  ALIAS && \
+  DISK_RIPPING && \
+  DATA_CONV && \
+  COPY_WAV && \
+  TOC_GENERATE && \
+  RESET_FILE_DESCLIPTER_VALUE
+  } || rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
+       RESET_FILE_DESCLIPTER_VALUE && \
+       ERROR_MESSAGE && \
+       exit 2
+elif [[ -z "${@}" ]]; then
+  ERROR_MESSAGE && \
+  exit 2
+else
+  {
+  CHANGE_FILE_DESCLIPTER_VALUE && \
+  ALIAS && \
+  DISK_RIPPING && \
+  DATA_CONV && \
+  WAV_TO_MP3 && \
+  TOC_GENERATE && \
+  RESET_FILE_DESCLIPTER_VALUE
+  } || rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}" && \
+       RESET_FILE_DESCLIPTER_VALUE && \
+       ERROR_MESSAGE && \
+       exit 2
+fi
