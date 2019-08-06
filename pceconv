@@ -152,7 +152,7 @@ function PRINT_VERSION(){
 }
 function ERROR_MESSAGE(){
     cat << ERR >&2 
-Sorry. An error has occurred. :_(
+Sorry. An error has occurred :_(
 Refer 'pceconv -h' or 'pceconv --help' for how to use the command.
 ERR
     rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
