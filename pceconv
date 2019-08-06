@@ -184,7 +184,6 @@ When the PC engine disk is mounted on /dev/sr0.
    $ ${0##*/} -w /dev/sr0
 
 EOS
-    rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
 }
 
 
