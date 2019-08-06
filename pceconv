@@ -30,8 +30,8 @@ function ALIAS(){
       if [[ "$(awk --version | head -n1)" =~ "GNU" ]]; then
         alias awk="awk"
       else
-        echo "Error: Please install GUN AWK(gawk)." \
-        || exit 2
+        echo "Error: Please install GUN AWK(gawk)." && \
+        exit 2
       fi
     fi
 }
