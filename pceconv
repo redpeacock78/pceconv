@@ -109,11 +109,13 @@ function WAV_TO_MP3(){
     }
 }
 function COPY_WAV(){
+    {
     echo "Currently copy wav files..."
-    for wav in $(\ls DATA | grep .wav | sed 's#^#MUSIC/#g'); do
+    for wav in $(\ls MUSIC | grep .wav | sed 's#^#MUSIC/#g'); do
         \cp -f ${wav} $(echo ${wav} | sed 's#MUSIC/M_##g')
     done && \
     echo "Done!"
+    }
 }
 function TOC_GENERATE(){
     ##PARAMETERS##
