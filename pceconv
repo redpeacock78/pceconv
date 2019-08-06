@@ -8,7 +8,7 @@ shopt -s expand_aliases
 
 ###PARAMETERS###
 DEFAULT_FILE_DESCLIPTER="$(ulimit -Sn)"
-MOUNT_POINT="$(echo ${@})"
+MOUNT_POINT="$(echo ${@##-*})"
 CDRDAO_TOC="$(mktemp)"
 CDPARANOIA_TOC="$(mktemp)"
 
@@ -175,13 +175,13 @@ Options:
 Example:
 When the PC engine disk is mounted on /dev/disk3.
 
-   ${0##*/} /dev/disk3
-   ${0##*/} -w /dev/disk3
+   $ ${0##*/} /dev/disk3
+   $ ${0##*/} -w /dev/disk3
 
 When the PC engine disk is mounted on /dev/sr0.
 
-   ${0##*/} /dev/sr0
-   ${0##*/} -w /dev/sr0
+   $ ${0##*/} /dev/sr0
+   $ ${0##*/} -w /dev/sr0
 
 EOS
     rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
