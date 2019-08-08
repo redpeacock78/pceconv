@@ -233,7 +233,7 @@ elif [[ "${@}" =~ -*w ]] || \
   ERROR_MESSAGE && \
   exit 1
   }
-  if [[ "${@}" =~ "-r" ]] || \
+  if [[ "${@}" =~ -*r ]] || \
   	 [[ "${@}" =~ "--rm-ripdata" ]]; then
   	REMOVE_RIP_DATA \
   	|| {
@@ -259,7 +259,7 @@ else
   ERROR_MESSAGE && \
   exit 1
   }
-  if [[ "${@}" =~ -*r ]] || \
+  if [[ "${@}" =~ "-r" ]] || \
   	 [[ "${@}" =~ "--rm-ripdata" ]]; then
   	REMOVE_RIP_DATA \
   	|| {
