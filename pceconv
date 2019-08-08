@@ -259,8 +259,8 @@ else
   ERROR_MESSAGE && \
   exit 1
   }
-  if [[ "${@}" == "-r" ]] || \
-  	 [[ "${@}" == "--rm-ripdata" ]]; then
+  if [[ "${@}" =~ "-r" ]] || \
+  	 [[ "${@}" =~ "--rm-ripdata" ]]; then
   	REMOVE_RIP_DATA \
   	|| {
   	RESET_FILE_DESCLIPTER_VALUE && \
