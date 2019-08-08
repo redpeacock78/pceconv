@@ -10,7 +10,7 @@
 #@(#)  DEFAULT_FILE_DESCRIPTER
 #@(#)  MOUNT_POINT
 #@(#)  SAMPLING_RATE
-#@(#)  BITRATE
+#@(#)  BIT_RATE
 #@(#)  CDRDAO_TOC
 #@(#)  CDPARANOIA_TOC
 #@(#)Arguments:
@@ -35,7 +35,7 @@ shopt -s expand_aliases
 DEFAULT_FILE_DESCLIPTER="$(ulimit -Sn)"
 MOUNT_POINT="$(echo ${@##-*} | tr ' ' \\n | grep /)"
 SAMPLING_RATE="$(echo ${@##-*} | tr ' ' \\n | grep -v /)"
-BITRATE="$(echo ${@##-*} | tr ' ' \\n | grep -v / | grep k)"
+BIT_RATE="$(echo ${@##-*} | tr ' ' \\n | grep -v / | grep k)"
 CDRDAO_TOC="$(mktemp)"
 CDPARANOIA_TOC="$(mktemp)"
 
@@ -123,7 +123,7 @@ function WAV_TO_MP3(){
                -vn \
                -ac 2 \
                -ar ${SAMPLING_RATE:-"44100"} \
-               -ab ${BITRATE:-"256k"} \
+               -ab ${BIT_RATE:-"128k"} \
                -acodec libmp3lame \
                -f mp3 \
                -loglevel fatal \
@@ -194,10 +194,10 @@ function USAGE(){
     PRINT_INFO="$(PRINT_VERSION)" && \
     cat << EOS >&2
 ${PRINT_INFO}
-Usage: ${0##*/} [OPTION] [SOURCE_DEVICE] [SAMPLING_RATE] [BITRATE]
+Usage: ${0##*/} [OPTION] [SOURCE_DEVICE] [SAMPLING_RATE] [BIT_RATE]
 
 It rips and converts data of PC engine (Super)CD-ROM^2.
-(Default SAMPLING_RATE="44100" and BITRATE="256k".)
+(Default SAMPLING_RATE="44100" and BIT_RATE="128k".)
 
 Options:
     -w, --no-mp3     Does not convert wav files to mp3.
