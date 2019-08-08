@@ -122,8 +122,8 @@ function WAV_TO_MP3(){
         ffmpeg -i ${wav} \
                -vn \
                -ac 2 \
-               -ar ${SAMPLING_RATE:-"48000"} \
-               -ab ${BITRATE:-"320k"} \
+               -ar ${SAMPLING_RATE:-"44100"} \
+               -ab ${BITRATE:-"256k"} \
                -acodec libmp3lame \
                -f mp3 \
                -loglevel fatal \
@@ -197,7 +197,7 @@ ${PRINT_INFO}
 Usage: ${0##*/} [OPTION] [SOURCE_DEVICE] [SAMPLING_RATE] [BITRATE]
 
 It rips and converts data of PC engine (Super)CD-ROM^2.
-(Default SAMPLING_RATE="48000" and BITRATE="320k".)
+(Default SAMPLING_RATE="44100" and BITRATE="256k".)
 
 Options:
     -w, --no-mp3     Does not convert wav files to mp3.
@@ -210,13 +210,13 @@ When the PC engine disk is mounted on /dev/disk3.
 
     $ ${0##*/} /dev/disk3
     $ ${0##*/} -w /dev/disk3
-    $ ${0##*/} -r /dev/disk3 44100 256k
+    $ ${0##*/} -r /dev/disk3 48000 320k
 
 When the PC engine disk is mounted on /dev/sr0.
 
     $ ${0##*/} /dev/sr0
     $ ${0##*/} -w /dev/sr0
-    $ ${0##*/} 44100 256k /dev/sr0
+    $ ${0##*/} 48000 320k /dev/sr0
 
 EOS
 }
