@@ -9,6 +9,8 @@
 #@(#)Grobals:
 #@(#)  DEFAULT_FILE_DESCRIPTER
 #@(#)  MOUNT_POINT
+#@(#)  SAMPLING_RATE
+#@(#)  BITRATE
 #@(#)  CDRDAO_TOC
 #@(#)  CDPARANOIA_TOC
 #@(#)Arguments:
@@ -31,7 +33,9 @@ shopt -s expand_aliases
 
 ###PARAMETERS###
 DEFAULT_FILE_DESCLIPTER="$(ulimit -Sn)"
-MOUNT_POINT="$(echo ${@##-*})"
+MOUNT_POINT="$(echo ${@##-*} | tr ' ' \\n | grep /)"
+SAMPLING_RATE="$(echo ${@##-*} | tr ' ' \\n | grep -v /)"
+BITRATE="$(echo ${@##-*} | tr ' ' \\n | grep -v / | grep k)"
 CDRDAO_TOC="$(mktemp)"
 CDPARANOIA_TOC="$(mktemp)"
 
@@ -118,8 +122,8 @@ function WAV_TO_MP3(){
         ffmpeg -i ${wav} \
                -vn \
                -ac 2 \
-               -ar 48000 \
-               -ab 320k \
+               -ar ${SAMPLING_RATE:-"48000"} \
+               -ab ${BITRATE:-"320k"} \
                -acodec libmp3lame \
                -f mp3 \
                -loglevel fatal \
@@ -186,10 +190,12 @@ function USAGE(){
     PRINT_INFO="$(PRINT_VERSION)" && \
     cat << EOS >&2
 ${PRINT_INFO}
-Usage: ${0##*/} [OPTION] [SOURCE_DEVICE]
+Usage: ${0##*/} [OPTION] [SOURCE_DEVICE] [SAMPLING_RATE] [BITRATE]
 
 It rips and converts data of PC engine (Super)CD-ROM^2.
+(Default sampling_rate="48000" and bitrate="320k".)
 
+Options:
     -w, --no-mp3     Does not convert wav files to mp3.
     -r, --rip-data   Erases the ripped data and leaves only the converted files.
     -h, --help       Show usage.
@@ -198,13 +204,15 @@ It rips and converts data of PC engine (Super)CD-ROM^2.
 Example:
 When the PC engine disk is mounted on /dev/disk3.
 
-   $ ${0##*/} /dev/disk3
-   $ ${0##*/} -w /dev/disk3
+    $ ${0##*/} /dev/disk3
+    $ ${0##*/} -w /dev/disk3
+    $ ${0##*/} -r /dev/disk3 44100 256k
 
 When the PC engine disk is mounted on /dev/sr0.
 
-   $ ${0##*/} /dev/sr0
-   $ ${0##*/} -w /dev/sr0
+    $ ${0##*/} /dev/sr0
+    $ ${0##*/} -w /dev/sr0
+    $ ${0##*/} 44100 256k /dev/sr0
 
 EOS
 }
