@@ -170,14 +170,18 @@ function TOC_GENERATE(){
     }
 }
 function REMOVE_RIP_DATA(){
+    {
     echo "Currently remove MUSIC/ and DATA/..." && \
     rm -rf MUSIC/ DATA/ && \
     echo "Done!"
+    }
 }
 ###DISPLAY_INFMATION###
 function PRINT_VERSION(){
+    {
     echo "PC Engine (Super)CD-ROM^2 CONVERTER VER. 1.00" && \
     rm -rf "${CDRDAO_TOC}" "${CDPARANOIA_TOC}"
+    }
 }
 function ERROR_MESSAGE(){
     cat << ERR >&2 
@@ -193,7 +197,7 @@ ${PRINT_INFO}
 Usage: ${0##*/} [OPTION] [SOURCE_DEVICE] [SAMPLING_RATE] [BITRATE]
 
 It rips and converts data of PC engine (Super)CD-ROM^2.
-(Default sampling_rate="48000" and bitrate="320k".)
+(Default SAMPLING_RATE="48000" and BITRATE="320k".)
 
 Options:
     -w, --no-mp3     Does not convert wav files to mp3.
