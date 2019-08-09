@@ -40,7 +40,7 @@ DEFAULT_FILE_DESCLIPTER="$(ulimit -Sn)"
 MOUNT_POINT="$(echo ${@##-*})"
 SAMPLING_RATE="$(echo ${@##/*} | tr ' ' \\n | awk -F = '/samp/ {print $2}')"
 BIT_RATE="$(echo ${@##/*} | tr ' ' \\n | awk -F = '/bit/ {print $2}')"
-CHANNEL="$(echo ${@##/*} | tr ' ' \\n | awk -F = '/chan/ {gsub(/mono/, "1")}{gsub(/stereo/, "2")}{print $2}')"
+CHANNEL="$(echo ${@##/*} | tr ' ' \\n | awk -F = '/chan/ {gsub(/mono/, "1");gsub(/stereo/, "2");print $2}"
 CDRDAO_TOC="$(mktemp)"
 CDPARANOIA_TOC="$(mktemp)"
 
